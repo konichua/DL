@@ -18,7 +18,7 @@ class BatchNormalization(BaseLayer):
         self.tensor_shape = None
         self.image_like = False
 
-    def initialize(self):
+    def initialize(self, weights_initializer=None, bias_initializer=None):
         self.bias = np.zeros((1, self.c))
         self.weights = np.ones((1, self.c))
 

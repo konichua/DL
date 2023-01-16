@@ -9,16 +9,30 @@ class NeuralNetwork:
         self.layers = []        # used in method append_layer
         self.data_layer = None  # init as net.data_layer = dataset
         self.loss_layer = None  # init as net.loss_layer = Loss.CrossEntropyLoss()
+        # self.data_loss = None # reg loss in every layer
         self.forward_output = None
         self.weights_initializer = weights_initializer
         self.bias_initializer = bias_initializer
-        self.phase = None
+        self._phase = None
+
+    @property
+    def phase(self):
+        return self._phase
+
+    @phase.setter
+    def phase(self, phase):
+        self._phase = phase
+        for layer in self.layers:
+            layer.testing_phase = phase
 
     def forward(self):
         input_tensor, self.label_tensor = self.data_layer.next()
+        reg_loss = 0
         for layer in self.layers:
             input_tensor = layer.forward(input_tensor)
-        return self.loss_layer.forward(input_tensor, self.label_tensor)
+            if layer.trainable and self.optimizer.regularizer:
+                reg_loss += layer.optimizer.regularizer.norm(layer.weights)
+        return self.loss_layer.forward(input_tensor, self.label_tensor) + reg_loss
 
     def backward(self):
         error_tensor = self.loss_layer.backward(self.label_tensor)
